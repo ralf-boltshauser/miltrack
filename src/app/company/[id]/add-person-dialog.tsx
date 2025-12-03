@@ -13,14 +13,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { CompanyWithDetails, createPerson } from "./company-actions";
+import { useEffect, useState } from "react";
+import { createPerson } from "./company-actions";
+
+type MinimalCompany = {
+  id: string;
+  name: string;
+  platoons: { id: string; name: string; memberCount?: number }[];
+};
 
 export default function AddPersonDialog({
   company,
 }: {
-  company: CompanyWithDetails;
+  company: MinimalCompany;
 }) {
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [platoonId, setPlatoonId] = useState("");
@@ -28,17 +35,22 @@ export default function AddPersonDialog({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // Avoid hydration mismatches from client-only dialog ids
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!name.trim()) {
-      setError("Name is required");
+      setError("Name wird benötigt");
       return;
     }
 
     if (!platoonId) {
-      setError("Please select a platoon");
+      setError("Bitte einen Zug auswählen");
       return;
     }
 
@@ -56,7 +68,7 @@ export default function AddPersonDialog({
         router.refresh();
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("Ein unerwarteter Fehler ist aufgetreten");
       console.error("Create person error:", err);
     } finally {
       setIsLoading(false);
@@ -66,13 +78,13 @@ export default function AddPersonDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Person</Button>
+        <Button>Person hinzufügen</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Person</DialogTitle>
+          <DialogTitle>Person hinzufügen</DialogTitle>
           <DialogDescription>
-            Add a new person to a platoon in this company.
+            Füge eine neue Person einem Zug dieser Kompanie hinzu.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -87,7 +99,7 @@ export default function AddPersonDialog({
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter person name"
+                placeholder="Name eingeben"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -95,7 +107,7 @@ export default function AddPersonDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="platoon">Platoon</Label>
+              <Label htmlFor="platoon">Zug</Label>
               <select
                 id="platoon"
                 value={platoonId}
@@ -104,7 +116,7 @@ export default function AddPersonDialog({
                 required
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">Select a platoon</option>
+                <option value="">Zug auswählen</option>
                 {company.platoons.map((platoon) => (
                   <option key={platoon.id} value={platoon.id}>
                     {platoon.name}
@@ -120,10 +132,10 @@ export default function AddPersonDialog({
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Person"}
+              {isLoading ? "Wird hinzugefügt..." : "Person hinzufügen"}
             </Button>
           </DialogFooter>
         </form>

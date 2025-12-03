@@ -165,5 +165,13 @@
   
   .animate-swiss-pulse {
     animation: swiss-border-pulse 2s ease-in-out infinite;
+@layer components {
+  /* Dark green variant for training checkboxes */
+  .checkbox-olive[data-slot="checkbox"] {
+    @apply data-[state=checked]:bg-[var(--accent-olive)] data-[state=checked]:border-[var(--accent-olive)] data-[state=checked]:text-[var(--accent-foreground)] data-[state=indeterminate]:bg-[var(--accent-olive)] data-[state=indeterminate]:border-[var(--accent-olive)] data-[state=indeterminate]:text-[var(--accent-foreground)] focus-visible:ring-[var(--accent-olive)];
+  }
+
+  .checkbox-olive [data-slot="checkbox-indicator"] {
+    color: var(--accent-foreground);
   }
 }
