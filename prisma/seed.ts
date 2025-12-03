@@ -114,6 +114,55 @@ async function main() {
   }
   console.log(`Created ${createdTrainings.length} trainings`);
 
+  // Create training instances
+  const allPersons = [...persons1, ...persons2];
+  const trainingInstances = [];
+
+  for (const training of createdTrainings) {
+    // Check if training name contains FTA and 5 (for FTA5)
+    if (/FTA\s*5/i.test(training.name)) {
+      // Create 2 instances for FTA5
+      const instance1 = await prisma.trainingInstance.create({
+        data: {
+          name: "FTA5 RS Start",
+          trainingId: training.id,
+        },
+      });
+      const instance2 = await prisma.trainingInstance.create({
+        data: {
+          name: "FTA5 RS Ende",
+          trainingId: training.id,
+        },
+      });
+      trainingInstances.push(instance1, instance2);
+    } else {
+      // Create 1 instance for all other trainings
+      const instance = await prisma.trainingInstance.create({
+        data: {
+          name: training.name,
+          trainingId: training.id,
+        },
+      });
+      trainingInstances.push(instance);
+    }
+  }
+  console.log(`Created ${trainingInstances.length} training instances`);
+
+  // Create training tracks for all persons to all training instances
+  const trainingTracks = [];
+  for (const person of allPersons) {
+    for (const instance of trainingInstances) {
+      const track = await prisma.trainingTrack.create({
+        data: {
+          personId: person.id,
+          trainingInstanceId: instance.id,
+        },
+      });
+      trainingTracks.push(track);
+    }
+  }
+  console.log(`Created ${trainingTracks.length} training tracks (${allPersons.length} persons × ${trainingInstances.length} instances)`);
+
   console.log("Seed completed successfully!");
 }
 
