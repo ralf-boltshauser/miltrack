@@ -92,7 +92,6 @@ export async function getPlatoonDetail(platoonId: string) {
   const memberCount = platoon.persons.length;
   const completedTracks = tracks.filter((t) => t.completedAt).length;
   const totalTracks = tracks.length;
-  const completionPercent = toIntegerPercent(completedTracks, totalTracks);
 
   const scoreTracks = tracks.filter((t) => t.points !== null);
   const averageScore = scoreTracks.length
@@ -126,6 +125,14 @@ export async function getPlatoonDetail(platoonId: string) {
       status,
     } satisfies MemberProgress;
   });
+
+  const completionPercent =
+    members.length === 0
+      ? 0
+      : Math.round(
+          members.reduce((sum, member) => sum + member.percent, 0) /
+            members.length,
+        );
 
   const topPerformers = [...members]
     .sort((a, b) => b.percent - a.percent)

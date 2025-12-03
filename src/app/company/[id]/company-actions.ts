@@ -110,9 +110,16 @@ export async function getCompanyNavigation(id: string) {
   });
 }
 
-function toIntegerPercent(numerator: number, denominator: number) {
-  if (!denominator) return 0;
-  return Math.round((numerator / denominator) * 100);
+function calculateAverageCompletion(
+  progress: { completed: number; total: number }[],
+) {
+  if (!progress.length) return 0;
+  const average =
+    progress.reduce(
+      (sum, p) => sum + (p.total ? p.completed / p.total : 0),
+      0,
+    ) / progress.length;
+  return Math.round(average * 100);
 }
 
 export async function getCompanyOverview(companyId: string) {
@@ -143,6 +150,7 @@ export async function getCompanyOverview(companyId: string) {
     include: {
       person: {
         select: {
+          id: true,
           platoonId: true,
         },
       },
@@ -162,6 +170,32 @@ export async function getCompanyOverview(companyId: string) {
   const completedTracks = tracks.filter((track) => track.completedAt).length;
   const totalTracks = tracks.length;
 
+  const personProgress = new Map<
+    string,
+    { completed: number; total: number; platoonId: string }
+  >();
+
+  for (const platoon of company.platoons) {
+    for (const person of platoon.persons) {
+      personProgress.set(person.id, {
+        completed: 0,
+        total: 0,
+        platoonId: platoon.id,
+      });
+    }
+  }
+
+  for (const track of tracks) {
+    const progress = personProgress.get(track.person.id);
+    if (!progress) continue;
+    progress.total += 1;
+    if (track.completedAt) progress.completed += 1;
+  }
+
+  const completionPercent = calculateAverageCompletion(
+    Array.from(personProgress.values()),
+  );
+
   const scoreTracks = tracks.filter((track) => track.points !== null);
   const averageScore = scoreTracks.length
     ? Math.round(
@@ -178,6 +212,12 @@ export async function getCompanyOverview(companyId: string) {
       (track) => track.completedAt,
     ).length;
 
+    const platoonCompletionPercent = calculateAverageCompletion(
+      Array.from(personProgress.values()).filter(
+        (progress) => progress.platoonId === platoon.id,
+      ),
+    );
+
     return {
       id: platoon.id,
       name: platoon.name,
@@ -185,10 +225,7 @@ export async function getCompanyOverview(companyId: string) {
       persons: platoon.persons,
       completedTracks: platoonCompleted,
       totalTracks: platoonTracks.length,
-      progressPercent: toIntegerPercent(
-        platoonCompleted,
-        platoonTracks.length,
-      ),
+      progressPercent: platoonCompletionPercent,
     };
   });
 
@@ -205,7 +242,7 @@ export async function getCompanyOverview(companyId: string) {
       totalMembers,
       completedTracks,
       totalTracks,
-      completionPercent: toIntegerPercent(completedTracks, totalTracks),
+      completionPercent,
       averageScore,
     },
     trainingStats,

@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Activity, BarChart3, Users } from "lucide-react";
+import { Activity, BarChart3, Loader2, Users } from "lucide-react";
+import { useState } from "react";
 import AddPersonDialog from "./add-person-dialog";
 import { CompanyOverview } from "./company-actions";
 import CompanyStatsCards from "./components/company-stats-cards";
@@ -11,6 +12,31 @@ import PlatoonProgressCard from "./components/platoon-progress-card";
 import TrainingStatisticsView from "./components/training-statistics-view";
 
 export default function CompanyDetail({ company }: { company: CompanyOverview }) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(`/api/company/${company.id}/export`);
+      if (!response.ok) {
+        throw new Error(`Export failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${sanitizeFilename(company.name)}-export.xlsx`;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Company export failed", error);
+      window.alert("Export fehlgeschlagen. Bitte erneut versuchen.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -26,9 +52,18 @@ export default function CompanyDetail({ company }: { company: CompanyOverview })
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="hidden sm:inline-flex">
-            <BarChart3 className="mr-2 size-4" />
-            Exportieren
+          <Button
+            variant="outline"
+            className="hidden sm:inline-flex"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <BarChart3 className="mr-2 size-4" />
+            )}
+            {isExporting ? "Exportiere..." : "Exportieren"}
           </Button>
           <AddPersonDialog
             company={{ id: company.id, name: company.name, platoons: company.platoons }}
