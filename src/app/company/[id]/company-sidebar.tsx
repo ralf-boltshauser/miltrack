@@ -11,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Building2, Users } from "lucide-react";
+import { Building2, ClipboardPlus, Layers, Users } from "lucide-react";
 import Link from "next/link";
 
 type Platoon = {
@@ -33,7 +33,7 @@ export function CompanySidebar({
 }) {
   const navigationItems = [
     {
-      title: "Overview",
+      title: "Übersicht",
       url: `/company/${companyId}`,
       icon: Building2,
     },
@@ -65,7 +65,7 @@ export function CompanySidebar({
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>Platoons</SidebarGroupLabel>
+          <SidebarGroupLabel>Züge</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {platoons.map((platoon) => (
@@ -78,6 +78,29 @@ export function CompanySidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Ausbildungen</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href={`/company/${companyId}/trainings/new`}>
+                    <ClipboardPlus />
+                    <span>Training anlegen</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href={`/company/${companyId}/training-instances/new`}>
+                    <Layers />
+                    <span>Training-Instanz anlegen</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

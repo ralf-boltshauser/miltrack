@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getPlatoonById } from "./platoon-actions";
+import PlatoonDetail from "./platoon-detail";
+import { getPlatoonDetail } from "./platoon-actions";
 
 export default async function PlatoonPage({
   params,
@@ -7,10 +8,10 @@ export default async function PlatoonPage({
   params: Promise<{ platoonId: string }>;
 }) {
   const platoonId = (await params).platoonId;
-  const platoon = await getPlatoonById(platoonId);
+  const platoon = await getPlatoonDetail(platoonId);
 
   if (!platoon) {
     notFound();
   }
-  return <div>PlatoonPage</div>;
+  return <PlatoonDetail platoon={platoon} />;
 }

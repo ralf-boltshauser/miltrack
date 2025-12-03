@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { getCompanyById } from "./company-actions";
 import CompanyDetail from "./company-detail";
+import { getCompanyOverview } from "./company-actions";
 
 export default async function CompanyDetailPage({
   params,
@@ -8,7 +8,7 @@ export default async function CompanyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const id = (await params).id;
-  const company = await getCompanyById(id);
+  const company = await getCompanyOverview(id);
 
   if (!company) {
     notFound();

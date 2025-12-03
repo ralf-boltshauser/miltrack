@@ -1,6 +1,6 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { notFound } from "next/navigation";
-import { getCompanyById } from "./company-actions";
+import { getCompanyNavigation } from "./company-actions";
 import { CompanySidebar } from "./company-sidebar";
 
 export default async function CompanyLayout({
@@ -11,7 +11,7 @@ export default async function CompanyLayout({
   params: Promise<{ id: string }>;
 }) {
   const id = (await params).id;
-  const company = await getCompanyById(id);
+  const company = await getCompanyNavigation(id);
 
   if (!company) {
     notFound();
