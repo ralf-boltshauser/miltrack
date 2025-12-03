@@ -2,9 +2,25 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { BarChart3, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { TrainingInstanceStat } from "../company-actions";
 
 type PlatoonOption = {
@@ -22,6 +38,7 @@ export default function TrainingStatisticsView({
 }) {
   const [selectedPlatoon, setSelectedPlatoon] = useState<string>("all");
   const [query, setQuery] = useState("");
+  const [selectedTraining, setSelectedTraining] = useState<TrainingInstanceStat | null>(null);
 
   const filtered = useMemo(() => {
     return trainingStats.filter((training) => {
@@ -83,7 +100,19 @@ export default function TrainingStatisticsView({
           const status = getStatusBadge(completionPercent);
 
           return (
-            <Card key={training.id} className="border-muted">
+            <Card
+              key={training.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedTraining(training)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelectedTraining(training);
+                }
+              }}
+              className="border-muted transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
@@ -114,11 +143,20 @@ export default function TrainingStatisticsView({
                     value={training.maxPoints === null ? "—" : training.maxPoints}
                   />
                 </div>
+                <div className="text-right text-xs font-medium text-primary">
+                  Details anzeigen →
+                </div>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      <DetailDialog
+        training={selectedTraining}
+        platoons={platoons}
+        onClose={() => setSelectedTraining(null)}
+      />
     </div>
   );
 }
@@ -173,4 +211,272 @@ function getStatusBadge(percent: number) {
     variant: "destructive" as const,
     className: "",
   };
+}
+
+function buildPlatoonBreakdown(
+  training: TrainingInstanceStat,
+  platoons: PlatoonOption[],
+) {
+  return platoons
+    .map((platoon) => {
+      const completed = training.completionByPlatoon[platoon.id] ?? 0;
+      const total = platoon.memberCount || training.totalMembers;
+      const open = Math.max(0, total - completed);
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+      return {
+        id: platoon.id,
+        name: platoon.name,
+        completed,
+        open,
+        total,
+        percent,
+      };
+    })
+    .sort((a, b) => b.completed - a.completed);
+}
+
+function buildScoreDistribution(
+  scores: number[],
+  maxPoints: number | null,
+) {
+  if (!scores.length) return [];
+  const observedMax = Math.max(...scores, maxPoints ?? 0, 1);
+  const bucketCount = 6;
+  const bucketSize = Math.max(1, Math.ceil(observedMax / bucketCount));
+  const buckets = Array.from({ length: bucketCount }, (_, i) => {
+    const start = i * bucketSize;
+    const end = i === bucketCount - 1 ? observedMax : (i + 1) * bucketSize - 1;
+    return { label: `${start}–${end}`, start, end, count: 0 };
+  });
+
+  for (const score of scores) {
+    const bucketIndex =
+      score === observedMax
+        ? bucketCount - 1
+        : Math.min(Math.floor(score / bucketSize), bucketCount - 1);
+    buckets[bucketIndex].count += 1;
+  }
+
+  return buckets;
+}
+
+function DetailDialog({
+  training,
+  platoons,
+  onClose,
+}: {
+  training: TrainingInstanceStat | null;
+  platoons: PlatoonOption[];
+  onClose: () => void;
+}) {
+  const platoonData = useMemo(
+    () => (training ? buildPlatoonBreakdown(training, platoons) : []),
+    [training, platoons],
+  );
+  const scoreBins = useMemo(
+    () =>
+      training
+        ? buildScoreDistribution(training.scores, training.maxPoints)
+        : [],
+    [training],
+  );
+
+  const avgScore = training?.averageScore ?? null;
+
+  return (
+    <Dialog open={!!training} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
+        {training && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-xl">
+                {training.name}
+                <span className="ml-2 text-sm text-muted-foreground">
+                  ({training.trainingName})
+                </span>
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                Beitrag der Züge und Punkteverteilung für diese Ausbildung.
+              </p>
+            </DialogHeader>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
+              <Card className="border-muted/60">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold">
+                    Zug-Beiträge
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Wie viele Personen pro Zug abgeschlossen haben
+                  </p>
+                </CardHeader>
+                <CardContent className="h-80 px-0 pb-4">
+                  {platoonData.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                      Keine Daten vorhanden.
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={platoonData}
+                        margin={{ left: 24, right: 12, top: 10 }}
+                        layout="vertical"
+                        barCategoryGap={8}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          className="stroke-muted"
+                          horizontal={false}
+                        />
+                        <XAxis type="number" allowDecimals={false} />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={110}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <RechartsTooltip
+                          cursor={{ fill: "hsl(var(--muted))" }}
+                          contentStyle={{
+                            background: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: 8,
+                            color: "hsl(var(--foreground))",
+                          }}
+                          formatter={(value: number, key) => {
+                            if (key === "completed") return [`${value}`, "Abgeschlossen"];
+                            if (key === "open") return [`${value}`, "Offen"];
+                            return [value, key];
+                          }}
+                        />
+                        {platoons.length > 0 && (
+                          <ReferenceLine
+                            x={training.totalMembers / platoons.length}
+                            stroke="hsl(var(--secondary-foreground))"
+                            strokeDasharray="4 4"
+                            label={{
+                              position: "insideTopRight",
+                              value: "Ø Kompanie",
+                              fill: "hsl(var(--secondary-foreground))",
+                              fontSize: 11,
+                            }}
+                          />
+                        )}
+                        <Bar
+                          dataKey="completed"
+                          stackId="a"
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="open"
+                          stackId="a"
+                          fill="hsl(var(--muted-foreground)/0.12)"
+                          radius={[0, 0, 4, 4]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-rows-[auto_1fr] gap-3">
+                <Card className="border-muted/60">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-semibold">
+                      Kennzahlen
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-3 text-sm">
+                    <Stat label="Abgeschlossen" value={`${training.completionCount}/${training.totalMembers}`} />
+                    <Stat label="Ø Punkte" value={avgScore ?? "—"} />
+                    <Stat
+                      label="Max Punkte"
+                      value={training.maxPoints === null ? "—" : training.maxPoints}
+                    />
+                    <Stat
+                      label="Beste Beteiligung"
+                      value={
+                        platoonData.length
+                          ? `${platoonData[0].name} (${platoonData[0].percent}%)`
+                          : "—"
+                      }
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-muted/60">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-semibold">
+                      Punkteverteilung
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      Wie oft eine Punktzahl erreicht wurde
+                    </p>
+                  </CardHeader>
+                  <CardContent className="h-64 px-0 pb-4">
+                    {scoreBins.length === 0 ? (
+                      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                        Noch keine Bewertungen vorhanden.
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={scoreBins}
+                          margin={{ left: 12, right: 12, top: 10 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis
+                            dataKey="label"
+                            tick={{ fontSize: 11 }}
+                            tickMargin={8}
+                            interval={0}
+                          />
+                          <YAxis allowDecimals={false} />
+                          <RechartsTooltip
+                            cursor={{ fill: "hsl(var(--muted))" }}
+                            contentStyle={{
+                              background: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: 8,
+                              color: "hsl(var(--foreground))",
+                            }}
+                            formatter={(value: number) => [`${value}x`, "Anzahl"]}
+                          />
+                          {avgScore !== null && (() => {
+                            const bin = scoreBins.find(
+                              (b) => avgScore >= b.start && avgScore <= b.end,
+                            );
+                            return bin ? (
+                              <ReferenceLine
+                                x={bin.label}
+                                stroke="hsl(var(--primary))"
+                                strokeDasharray="4 4"
+                                ifOverflow="extendDomain"
+                                label={{
+                                  value: `Ø ${avgScore}`,
+                                  position: "insideTop",
+                                  fill: "hsl(var(--primary))",
+                                  fontSize: 11,
+                                }}
+                              />
+                            ) : null;
+                          })()}
+                          <Bar
+                            dataKey="count"
+                            fill="hsl(var(--primary))"
+                            radius={[6, 6, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }

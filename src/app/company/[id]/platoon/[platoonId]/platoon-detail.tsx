@@ -3,7 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, LayoutPanelLeft, ListChecks, Users } from "lucide-react";
+import {
+  ChevronLeft,
+  LayoutPanelLeft,
+  ListChecks,
+  Loader2,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { PlatoonDetail as PlatoonDetailData } from "./platoon-actions";
@@ -19,6 +25,30 @@ const tabs = [
 
 export default function PlatoonDetail({ platoon }: { platoon: PlatoonDetailData }) {
   const [active, setActive] = useState<string>("overview");
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(`/api/platoon/${platoon.id}/export`);
+      if (!response.ok) {
+        throw new Error(`Export failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${sanitizeFilename(platoon.name)}-export.xlsx`;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Platoon export failed", error);
+      window.alert("Export fehlgeschlagen. Bitte erneut versuchen.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -33,7 +63,12 @@ export default function PlatoonDetail({ platoon }: { platoon: PlatoonDetailData 
           <p className="text-sm text-muted-foreground">Zug-Übersicht zur Einsatzbereitschaft</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">Exportieren</Button>
+          <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+            {isExporting ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : null}
+            {isExporting ? "Exportiere..." : "Exportieren"}
+          </Button>
         </div>
       </header>
 
