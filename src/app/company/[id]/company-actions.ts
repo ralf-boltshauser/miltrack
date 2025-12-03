@@ -3,7 +3,22 @@
 import { prisma } from "@/lib/prisma";
 
 type TrainingTrackWithRelations = Awaited<
-  ReturnType<typeof prisma.trainingTrack.findMany>
+  ReturnType<
+    typeof prisma.trainingTrack.findMany<{
+      include: {
+        person: {
+          select: {
+            platoonId: true;
+          };
+        };
+        trainingInstance: {
+          include: {
+            training: true;
+          };
+        };
+      };
+    }>
+  >
 >[number];
 
 export type CompanyOverview = {

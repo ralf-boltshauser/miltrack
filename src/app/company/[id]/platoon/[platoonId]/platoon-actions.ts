@@ -2,7 +2,20 @@
 import { prisma } from "@/lib/prisma";
 import { TrainingInstanceStat } from "../../company-actions";
 
-type PlatoonTrack = Awaited<ReturnType<typeof prisma.trainingTrack.findMany>>[number];
+type PlatoonTrack = Awaited<
+  ReturnType<
+    typeof prisma.trainingTrack.findMany<{
+      include: {
+        trainingInstance: {
+          include: { training: true };
+        };
+        person: {
+          select: { id: true };
+        };
+      };
+    }>
+  >
+>[number];
 
 type MemberProgress = {
   id: string;
