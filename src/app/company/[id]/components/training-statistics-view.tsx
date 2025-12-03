@@ -336,12 +336,23 @@ function DetailDialog({
                           tick={{ fontSize: 12 }}
                         />
                         <RechartsTooltip
-                          cursor={{ fill: "hsl(var(--muted))" }}
+                          cursor={{ fill: "rgba(75, 83, 32, 0.08)" }}
                           contentStyle={{
-                            background: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: 8,
-                            color: "hsl(var(--foreground))",
+                            background: "#FFFFFF",
+                            border: "1px solid #E5E5E5",
+                            borderRadius: 6,
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            padding: "10px 14px",
+                          }}
+                          labelStyle={{
+                            color: "#1C1C1C",
+                            fontWeight: 600,
+                            marginBottom: 6,
+                          }}
+                          itemStyle={{
+                            color: "#1C1C1C",
+                            fontSize: 13,
+                            padding: "2px 0",
                           }}
                           formatter={(value: number, key) => {
                             if (key === "completed") return [`${value}`, "Abgeschlossen"];
@@ -434,12 +445,23 @@ function DetailDialog({
                           />
                           <YAxis allowDecimals={false} />
                           <RechartsTooltip
-                            cursor={{ fill: "hsl(var(--muted))" }}
+                            cursor={{ fill: "rgba(75, 83, 32, 0.08)" }}
                             contentStyle={{
-                              background: "hsl(var(--card))",
-                              border: "1px solid hsl(var(--border))",
-                              borderRadius: 8,
-                              color: "hsl(var(--foreground))",
+                              background: "#FFFFFF",
+                              border: "1px solid #E5E5E5",
+                              borderRadius: 6,
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              padding: "10px 14px",
+                            }}
+                            labelStyle={{
+                              color: "#1C1C1C",
+                              fontWeight: 600,
+                              marginBottom: 6,
+                            }}
+                            itemStyle={{
+                              color: "#1C1C1C",
+                              fontSize: 13,
+                              padding: "2px 0",
                             }}
                             formatter={(value: number) => [`${value}x`, "Anzahl"]}
                           />
