@@ -1,10 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
-type TrainingTrackWithRelations = Awaited<
-  ReturnType<typeof prisma.trainingTrack.findMany>
->[number];
+type TrainingTrackWithRelations = Prisma.TrainingTrackGetPayload<{
+  include: {
+    person: { select: { id: true; platoonId: true } };
+    trainingInstance: { include: { training: true } };
+  };
+}>;
 
 export type CompanyOverview = {
   id: string;

@@ -11,6 +11,10 @@ import CompanyStatsCards from "./components/company-stats-cards";
 import PlatoonProgressCard from "./components/platoon-progress-card";
 import TrainingStatisticsView from "./components/training-statistics-view";
 
+function sanitizeFilename(name: string): string {
+  return name.replace(/[<>:"/\\|?*]/g, "_").trim();
+}
+
 export default function CompanyDetail({ company }: { company: CompanyOverview }) {
   const [isExporting, setIsExporting] = useState(false);
 

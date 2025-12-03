@@ -1,8 +1,14 @@
 "use server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { TrainingInstanceStat } from "../../company-actions";
 
-type PlatoonTrack = Awaited<ReturnType<typeof prisma.trainingTrack.findMany>>[number];
+type PlatoonTrack = Prisma.TrainingTrackGetPayload<{
+  include: {
+    person: { select: { id: true } };
+    trainingInstance: { include: { training: true } };
+  };
+}>;
 
 type MemberProgress = {
   id: string;

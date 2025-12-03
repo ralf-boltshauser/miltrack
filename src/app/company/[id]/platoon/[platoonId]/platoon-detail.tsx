@@ -17,6 +17,10 @@ import PlatoonMembersTab from "./components/platoon-members-tab";
 import PlatoonOverviewTab from "./components/platoon-overview-tab";
 import PlatoonTrainingsTab from "./components/platoon-trainings-tab";
 
+function sanitizeFilename(name: string): string {
+  return name.replace(/[<>:"/\\|?*]/g, "_").trim();
+}
+
 const tabs = [
   { id: "overview", label: "Übersicht", icon: LayoutPanelLeft },
   { id: "members", label: "Personen", icon: Users },
