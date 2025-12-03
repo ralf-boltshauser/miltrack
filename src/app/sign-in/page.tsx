@@ -15,6 +15,7 @@ import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getFirstCompanyId } from "./actions";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -37,7 +38,14 @@ export default function SignInPage() {
       if (result.error) {
         setError(result.error.message || "Failed to sign in");
       } else {
-        router.push("/");
+        // Get the first company ID and redirect there
+        const companyId = await getFirstCompanyId();
+        if (companyId) {
+          router.push(`/company/${companyId}`);
+        } else {
+          // If no company exists, redirect to company list page
+          router.push("/company");
+        }
         router.refresh();
       }
     } catch (err) {

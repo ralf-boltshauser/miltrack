@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUpWithUserType } from "./actions";
+import { getFirstCompanyId } from "../sign-in/actions";
 import { UserType } from "@/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,14 @@ export default function SignUpPage() {
       if (result.error) {
         setError(result.error);
       } else {
-        router.push("/");
+        // Get the first company ID and redirect there
+        const companyId = await getFirstCompanyId();
+        if (companyId) {
+          router.push(`/company/${companyId}`);
+        } else {
+          // If no company exists, redirect to company list page
+          router.push("/company");
+        }
         router.refresh();
       }
     } catch (err) {
