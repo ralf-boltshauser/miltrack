@@ -7,7 +7,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,11 +47,11 @@
 :root {
   --radius: 0.25rem; /* 4px max as per branding guide */
   /* Swiss Military Brand Colors */
-  --primary-red: #DA291C;
-  --white: #FFFFFF;
-  --dark-grey: #1C1C1C;
-  --neutral-grey: #E5E5E5;
-  --accent-olive: #4B5320;
+  --primary-red: #da291c;
+  --white: #ffffff;
+  --dark-grey: #1c1c1c;
+  --neutral-grey: #e5e5e5;
+  --accent-olive: #4b5320;
 
   /* Base colors */
   --background: var(--white);
@@ -90,34 +91,34 @@
   /* Dark mode maintains brand colors with adjusted contrast */
   --background: var(--dark-grey);
   --foreground: var(--white);
-  --card: #2A2A2A;
+  --card: #2a2a2a;
   --card-foreground: var(--white);
-  --popover: #2A2A2A;
+  --popover: #2a2a2a;
   --popover-foreground: var(--white);
   --primary: var(--primary-red);
   --primary-foreground: var(--white);
-  --secondary: #3A3A3A;
+  --secondary: #3a3a3a;
   --secondary-foreground: var(--white);
-  --muted: #3A3A3A;
-  --muted-foreground: #B0B0B0;
+  --muted: #3a3a3a;
+  --muted-foreground: #b0b0b0;
   --accent: var(--accent-olive);
   --accent-foreground: var(--white);
   --destructive: var(--primary-red);
-  --border: #3A3A3A;
-  --input: #3A3A3A;
+  --border: #3a3a3a;
+  --input: #3a3a3a;
   --ring: var(--primary-red);
   --chart-1: var(--primary-red);
   --chart-2: var(--accent-olive);
   --chart-3: var(--white);
   --chart-4: var(--neutral-grey);
   --chart-5: #888888;
-  --sidebar: #2A2A2A;
+  --sidebar: #2a2a2a;
   --sidebar-foreground: var(--white);
   --sidebar-primary: var(--primary-red);
   --sidebar-primary-foreground: var(--white);
-  --sidebar-accent: #3A3A3A;
+  --sidebar-accent: #3a3a3a;
   --sidebar-accent-foreground: var(--white);
-  --sidebar-border: #3A3A3A;
+  --sidebar-border: #3a3a3a;
   --sidebar-ring: var(--primary-red);
 }
 
@@ -131,12 +132,38 @@
     line-height: 1.4;
     letter-spacing: 0;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     letter-spacing: -0.01em; /* -1% for headlines */
     font-weight: 700;
     line-height: 1.4;
   }
-  p, span, div, a, button {
+  p,
+  span,
+  div,
+  a,
+  button {
     letter-spacing: 0; /* 0% for body */
+  }
+}
+
+@layer utilities {
+  @keyframes swiss-border-pulse {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.02);
+    }
+  }
+  
+  .animate-swiss-pulse {
+    animation: swiss-border-pulse 2s ease-in-out infinite;
   }
 }
